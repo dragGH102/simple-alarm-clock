@@ -1,0 +1,118 @@
+<!--
+ IMPORTANT: All copyright of pieces of code copied and/or modified belong to their owners.
+ 
+ NOTE: I have used "developer edition"(= non-minimized one) Modernizr for developing purposes (for a better understanding on how they work)
+ 
+-->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<title> Simple Alarm clock </title>
+		<script type="text/javascript" src="js/jquery.min.js"></script> <!-- jQuery JS library (version 1.10.2) -->
+		<script type="text/javascript" src="js/modernizr.js"></script> <!-- MODERNIZR JS library -->
+		
+		<meta content='width=device-width, initial-scale=0.5' name='viewport' /> <!-- on MOBILE DEVICES ADAPT SIZE (WITHOUT DISABLING Zoom) -->
+		
+	</head>
+	<body bgcolor="#F0F0F0">
+		<div id="alarm_clock" style="width:40%; <!--height:100%;--> float:left; display:block; background-color:#F0F0F0; left:0;  margin-right:10px; font-size: 1.5em; vertical-align:top;">
+			<img src="images/alarm_clock.png" height="320px" width="320px" /><br/>
+			<input type = "text"  value="9" id  = "hField" style="margin-top:30px; display:inline-block; text-align:right;" />
+			<span style="margin-top:20px;">&nbsp; : &nbsp;</span>
+			<input type = "text"  value="0" id  = "mField" style="margin-top:30px; display:inline-block; text-align:right;" />
+			<input type="button" value = "SET ALARM" id = "btnSet" style="margin-top:26px; margin-left:120px; display:block;" />
+			<div id="sound_element"></div>
+		</div>
+		<div id="days" style="width:20%; <!--height:100%;--> display:block; float:right; background-color:#F0F0F0; right:0; margin-left:10px; font-size: 1.5em; vertical-align:top;">
+			
+			<div style="margin-top:100px;"></div>
+			<input type = "checkbox" id  = "d_mon"  value  = "mon" />&nbsp; Monday<br/>
+			<input type = "checkbox" id  = "d_tue" value  = "tue" />&nbsp; Tuesday<br/>
+			<input type = "checkbox" id  = "d_wed" value  = "wed" />&nbsp; Wednesday<br/>
+			<input type = "checkbox" id  = "d_thu" value  = "thu" />&nbsp; Thursday<br/>
+			<input type = "checkbox" id  = "d_fri" value  = "fri" />&nbsp; Friday<br/>
+			<input type = "checkbox" id  = "d_sat" value  = "sat" />&nbsp; Saturday<br/>
+			<input type = "checkbox" id  = "d_sun" value  = "sun" />&nbsp; Sunday
+			
+			
+		</div>
+		
+		
+		<script>
+			
+			var hours = 9,minutes = 0,  weekdays = new Array() , intervalID;
+			
+			for (var i = 0; i <=6 ; i++){  // init week days.. (0 = Sunday , 1 = Monday , .... , 6 = Saturday)
+				weekdays[i] = 0; // alarm not set on current day..
+			}
+			
+			function monitorTime(){
+				var dateobj=new Date(); // get current date...
+				var current_hours = dateobj.getHours();
+				var current_minutes = dateobj.getMinutes();
+				var current_day = dateobj.getDay();
+				
+			
+				if (window.weekdays[current_day] == 1 && parseInt(current_hours) == parseInt(window.hours) && parseInt(current_minutes) == parseInt(window.minutes) ){
+					// Ring ring...
+					console.log ("Alarm triggered!");
+					window.clearInterval(window.intervalID); // stop time monitoring (to let alarm clock ring..) .. (of course a "set alarm" is needed to re-enable alarm clock..!)
+					
+					var sound_file_url = 'sounds/alarm.mp3';
+					if (Modernizr.audio.mp3){ // check audio support...
+						$('#sound_element').html('<audio autoplay="autoplay"  <source src="'+sound_file_url+'" hidden=true autostart=true>');
+					} else {
+						var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+						if (is_chrome){
+							delete window.alert; // Chrome workaround for "alert".. (http://stackoverflow.com/questions/6184169/alert-not-working-in-chrome)
+						}
+						alert("ALARM TRIGGERED!! (sorry. your browser doesn't support HTML5 audio tag..)");
+					}
+				}
+			}
+			
+			$('#btnSet').click(function(){
+				var hours = parseInt($('#hField').val());
+				var minutes = parseInt($('#mField').val());
+				if (hours>=0 && hours <=23 && minutes >=0 && minutes <= 59){
+			
+					window.hours = hours;
+					window.minutes = minutes;
+					
+					window.weekdays[0] = ($('#d_sun').is(':checked') ? 1 : 0);
+					window.weekdays[1] = ($('#d_mon').is(':checked') ? 1 : 0); 
+					window.weekdays[2] = ($('#d_tue').is(':checked') ? 1 : 0);
+					window.weekdays[3] = ($('#d_wed').is(':checked') ? 1 : 0);
+					window.weekdays[4] = ($('#d_thu').is(':checked') ? 1 : 0);
+					window.weekdays[5] = ($('#d_fri').is(':checked') ? 1 : 0);
+					window.weekdays[6] = ($('#d_sat').is(':checked') ? 1 : 0);
+					
+					/*
+						setInterval e setTimeout work on "ms" values. The difference stays in:
+						- setInterval: execute the script every X ms
+						- setTimeout: execute the script ONCE after X m
+					*/
+					
+					window.intervalID = window.setInterval("monitorTime()",500); // check every 500ms (we can't be sure that interval starts at 0ms of current second)
+					
+					console.log("Alarm set!"); // debug
+				} else {
+					console.log("Time must be in right range! Hours = [0,23] , Minutes = [0,59]");
+				}
+			});
+			
+			$(window).resize(function(){ // CENTER DIV on page..
+				$('#alarm_clock').css({
+					position:'absolute',
+					left: ($(window).width() - $('#alarm_clock').outerWidth())/2,
+					top: ($(window).height() - $('#alarm_clock').outerHeight())/2
+				});
+			});
+			
+			$(document).ready(function(){ // set div position.. on load...
+				$(window).trigger('resize');
+			});
+		</script>
+	</body>
+</html>
